@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeNetHostApp", "NativeNetHostApp\NativeNetHostApp.vcxproj", "{14D9A6E5-5A43-43DF-AE61-D5FE76275CD1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{623E5DDD-678B-4504-A91E-D62F4D4C6B63} = {623E5DDD-678B-4504-A91E-D62F4D4C6B63}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManagedApp", "ManagedApp\ManagedApp.csproj", "{623E5DDD-678B-4504-A91E-D62F4D4C6B63}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14D9A6E5-5A43-43DF-AE61-D5FE76275CD1}.Debug|x64.ActiveCfg = Debug|x64
+		{14D9A6E5-5A43-43DF-AE61-D5FE76275CD1}.Debug|x64.Build.0 = Debug|x64
+		{14D9A6E5-5A43-43DF-AE61-D5FE76275CD1}.Release|x64.ActiveCfg = Release|x64
+		{14D9A6E5-5A43-43DF-AE61-D5FE76275CD1}.Release|x64.Build.0 = Release|x64
+		{623E5DDD-678B-4504-A91E-D62F4D4C6B63}.Debug|x64.ActiveCfg = Debug|x64
+		{623E5DDD-678B-4504-A91E-D62F4D4C6B63}.Debug|x64.Build.0 = Debug|x64
+		{623E5DDD-678B-4504-A91E-D62F4D4C6B63}.Release|x64.ActiveCfg = Release|x64
+		{623E5DDD-678B-4504-A91E-D62F4D4C6B63}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9C400FCA-E9D4-4CDF-B697-26D5DD47A813}
+	EndGlobalSection
+EndGlobal
