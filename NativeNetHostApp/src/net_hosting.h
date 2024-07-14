@@ -41,20 +41,27 @@ namespace NetHost
 	// Specify a callback that will be invoked by .NET hosting components when an error is occured.
 	void SetErrorWriter(ErrorWriterCallback callback);
 
-	class RuntimeDelegate
+	// A delegate to load assembly and then get function pointer to a managed method. When invoking the delegate, the typename
+	// doesn't necessarily have to be stored in the assembly being loaded. It could be in one of the dependencies.
+	class LoadAssemblyAndGetFuncPointer_RuntimeDelegate
 	{
-	protected:
-		int delegateType;
+	private:
 		void* delegate;
 
 	public:
-		RuntimeDelegate(int delegateType, void* delegate);
+		LoadAssemblyAndGetFuncPointer_RuntimeDelegate(void* delegate);
+		void* Perform(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
+	};
 
-		void* LoadAndGet(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
-		void* Get(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
-
+	// A delegate to get function pointer to a managed method [NET 5+].
+	class GetFuncPointer_RuntimeDelegate
+	{
 	private:
-		void AssertTypeIs(int type) const;
+		void* delegate;
+
+	public:
+		GetFuncPointer_RuntimeDelegate(void* delegate);
+		void* Perform(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
 	};
 
 	class HostContext
@@ -71,8 +78,9 @@ namespace NetHost
 
 		// Run the app (works if you use InitForCommandLine() to host an app).
 		int RunApp() const;
-		RuntimeDelegate LoadAssemblyAndGetFuncPointer() const;
-		RuntimeDelegate GetFuncPointer() const;
+
+		LoadAssemblyAndGetFuncPointer_RuntimeDelegate GenerateLoadAssemblyAndGetFuncPointerDelegate() const;
+		GetFuncPointer_RuntimeDelegate GenerateGetFuncPointerDelegate() const;
 
 		HostContext& operator=(const HostContext& handle) = delete;
 

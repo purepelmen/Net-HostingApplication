@@ -11,16 +11,16 @@ namespace ManagedApp
             Console.WriteLine($"Hello, World in C#! The HostComm::IsInitialized is {HostComm.IsInitialized}.");
             return 0;
         }
+        
+        public static void Bark()
+        {
+            Console.WriteLine("Bark!");
+        }
 
         [UnmanagedCallersOnly]
         public static void DoAnother()
         {
             Console.WriteLine("You're doing something another!");
-        }
-        
-        public static void Bark()
-        {
-            Console.WriteLine("Bark!");
         }
     }
 }

@@ -68,40 +68,6 @@ namespace NetHost
 		i_loadedFxr.funcs.set_error_writer(callback);
 	}
 
-	RuntimeDelegate::RuntimeDelegate(int delegateType, void* delegate) : delegateType(delegateType), delegate(delegate)
-	{
-	}
-
-	void* RuntimeDelegate::LoadAndGet(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
-	{
-		AssertTypeIs(hdt_load_assembly_and_get_function_pointer);
-
-		void* outCallback;
-		int result = ((load_assembly_and_get_function_pointer_fn)delegate)(assemblyPath.data(), typeName.data(), methodName.data(), delegateTypeName, nullptr, &outCallback);
-
-		assert(result == S_OK);
-		return outCallback;
-	}
-
-	void* RuntimeDelegate::Get(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
-	{
-		AssertTypeIs(hdt_get_function_pointer);
-
-		void* outCallback;
-		int result = ((get_function_pointer_fn)delegate)(typeName.data(), methodName.data(), delegateTypeName, nullptr, nullptr, &outCallback);
-
-		assert(result == S_OK);
-		return outCallback;
-	}
-
-	void RuntimeDelegate::AssertTypeIs(int type) const
-	{
-		if (delegateType != type)
-		{
-			throw std::runtime_error("Invalid delegate type");
-		}
-	}
-
 	HostContext::HostContext(void* handle) : handle(handle)
 	{
 	}
@@ -136,7 +102,33 @@ namespace NetHost
 		}
 	}
 
-	RuntimeDelegate HostContext::LoadAssemblyAndGetFuncPointer() const
+	LoadAssemblyAndGetFuncPointer_RuntimeDelegate::LoadAssemblyAndGetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate)
+	{
+	}
+
+	void* LoadAssemblyAndGetFuncPointer_RuntimeDelegate::Perform(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
+	{
+		void* outCallback;
+		int result = ((load_assembly_and_get_function_pointer_fn)delegate)(assemblyPath.data(), typeName.data(), methodName.data(), delegateTypeName, nullptr, &outCallback);
+
+		assert(result == S_OK);
+		return outCallback;
+	}
+
+	GetFuncPointer_RuntimeDelegate::GetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate)
+	{
+	}
+
+	void* GetFuncPointer_RuntimeDelegate::Perform(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
+	{
+		void* outCallback;
+		int result = ((get_function_pointer_fn)delegate)(typeName.data(), methodName.data(), delegateTypeName, nullptr, nullptr, &outCallback);
+
+		assert(result == S_OK);
+		return outCallback;
+	}
+
+	LoadAssemblyAndGetFuncPointer_RuntimeDelegate HostContext::GenerateLoadAssemblyAndGetFuncPointerDelegate() const
 	{
 		ThrowIfUninitialized();
 		ThrowIfNoValidHandle();
@@ -147,10 +139,10 @@ namespace NetHost
 		int result = i_loadedFxr.funcs.get_runtime_delegate(handle, delegateType, &delegate);
 		assert(result == S_OK);
 
-		return RuntimeDelegate(delegateType, delegate);
+		return LoadAssemblyAndGetFuncPointer_RuntimeDelegate(delegate);
 	}
 
-	RuntimeDelegate HostContext::GetFuncPointer() const
+	GetFuncPointer_RuntimeDelegate HostContext::GenerateGetFuncPointerDelegate() const
 	{
 		ThrowIfUninitialized();
 		ThrowIfNoValidHandle();
@@ -161,7 +153,7 @@ namespace NetHost
 		int result = i_loadedFxr.funcs.get_runtime_delegate(handle, delegateType, &delegate);
 		assert(result == S_OK);
 
-		return RuntimeDelegate(delegateType, delegate);
+		return GetFuncPointer_RuntimeDelegate(delegate);
 	}
 
 	HostContext InitForCommandLine(int argc, const wchar_t** argv)

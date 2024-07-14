@@ -30,17 +30,19 @@ int main()
     NetHost::SetErrorWriter(DebugDNetError);
 
     NetHost::HostContext context = NetHost::InitForRuntimeConfig(pathToRuntimeConfig.c_str());
-    auto delegate = context.LoadAssemblyAndGetFuncPointer();
+    auto loadAndGetDelegate = context.GenerateLoadAssemblyAndGetFuncPointerDelegate();
 
     void* callback;
 
     std::cout << "Switching to the .NET world...\n";
-    callback = delegate.LoadAndGet(assemblyPath, L"ManagedApp.HostComm, ManagedApp", L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
+    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.HostComm, ManagedApp", L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
     ((HostCommInitCallback)callback)(&HostComm::GetNativeUtility);
 
-    callback = delegate.LoadAndGet(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Main");
+    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Main");
     ((NetHost::DefaultDNetCallback)callback)(nullptr, 0);
-    callback = delegate.LoadAndGet(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Bark", L"ManagedApp.Program+TestDelegate, ManagedApp");
+    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Bark", L"ManagedApp.Program+TestDelegate, ManagedApp");
+    ((VoidNoArgPointer)callback)();
+    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"DoAnother", NetHost::UNMANAGED_CALLERS_ONLY);
     ((VoidNoArgPointer)callback)();
 
     context.Close();
