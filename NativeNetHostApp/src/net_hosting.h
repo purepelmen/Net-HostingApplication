@@ -14,7 +14,9 @@
 // 3. Also you can invoke a managed method without a predefined signature (when you haven't specified the delegate typename), or 
 // the delegate type name. To do this you pass NetHost::UNMANAGED_CALLERS_ONLY constant to the delegate type name argument, and mark
 // your managed method with UnmanagedCallersOnly attribute. After that you will no longer be able to execute it from the managed code
-// directly, but you will be able to execute it from the native code with any signature.
+// directly, but you will be able to execute it from the native code with any signature. It will work on .NET 5 and above.
+// 4. You can invoke only static methods this way. Otherwise you should use Marshal.GetFunctionPointerForDelegate<T>() on the managed side,
+// so you can have a native pointer to execute any method, not only static ones.
 
 // Additional things will be corrected and improved as long as I find something new.
 
@@ -23,7 +25,7 @@ namespace NetHost
 	typedef void(__cdecl* ErrorWriterCallback)(const wchar_t* message);
 	typedef int(__cdecl *DefaultDNetCallback)(void* args, int sizeBytes);
 
-	// Use to call a C# method without a predefined signature. But it must be marked with [UnmanagedCallersOnly].
+	// (NET 5+) Use to call a C# method without a predefined signature, but it must be marked with [UnmanagedCallersOnly].
 	const wchar_t* const UNMANAGED_CALLERS_ONLY = (const wchar_t*) -1;
 
 	// Initialize the utilities, and find and load hostfxr. Returns true if it's been loaded or already loaded.
@@ -67,6 +69,7 @@ namespace NetHost
 
 		void Close();
 
+		// Run the app (works if you use InitForCommandLine() to host an app).
 		int RunApp() const;
 		RuntimeDelegate LoadAssemblyAndGetFuncPointer() const;
 		RuntimeDelegate GetFuncPointer() const;
@@ -78,11 +81,12 @@ namespace NetHost
 	};
 
 	// Initialize for running an application using the path to an executable.
-	// The application part means the managed (.DLL) will work as if it's an executable, rather than a component (library).
+	// The application part means the managed (.DLL) will work as if you **run** an executable, rather than loading
+	// a library/component (i.e. to customize how the managed app is started).
 	HostContext InitForCommandLine(int argc, const wchar_t** argv);
 
 	// Initialize for running as a component using a runtime configuration.
-	// The component part means it's a library loaded in addition to the native application, in contrast to loading it as a
+	// The component part means you **load** a library in addition to the native application, in contrast to running it as a
 	// managed sub-application.
 	HostContext InitForRuntimeConfig(const wchar_t* configPath);
 }
