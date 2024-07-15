@@ -10,7 +10,7 @@ namespace ManagedApp
         /// <summary>
         /// A native hostcom handler that locates a native registered function and returns it, or nullptr otherwise.
         /// </summary>
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
         private delegate IntPtr UtilityLocator(string utilityName);
 
         public static bool IsInitialized => _isInitialized;

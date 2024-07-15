@@ -10,6 +10,8 @@
 static void DebugDNetError(const wchar_t* message);
 static std::wstring GetExecutableDirW();
 
+static void DoTestUtility();
+
 using VoidNoArgPointer = void (*)();
 using HostCommInitCallback = void (*)(void* utilityLocator);
 
@@ -38,11 +40,9 @@ int main()
     callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.HostComm, ManagedApp", L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
     ((HostCommInitCallback)callback)(&HostComm::GetNativeUtility);
 
-    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Main");
-    ((NetHost::DefaultDNetCallback)callback)(nullptr, 0);
-    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Bark", L"ManagedApp.Program+TestDelegate, ManagedApp");
-    ((VoidNoArgPointer)callback)();
-    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"DoAnother", NetHost::UNMANAGED_CALLERS_ONLY);
+    HostComm::RegisterNativeUtility(L"test_utility", &DoTestUtility);
+
+    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, mscorlib");
     ((VoidNoArgPointer)callback)();
 
     context.Close();
@@ -61,4 +61,9 @@ std::wstring GetExecutableDirW()
 
     std::filesystem::path exePath = std::wstring(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
     return exePath.parent_path().wstring();
+}
+
+void DoTestUtility()
+{
+    std::cout << "You've invoked the test utility on the native side.\n";
 }

@@ -4,19 +4,17 @@
 #include <filesystem>
 
 // About executing managed methods from the native side.
-// If a method has a very simple signature (void Method()), it can be invoked by just specifying type name, and method name. 
-// However for a more complicated methods there are some important things to keep in mind.
-// 1. To be able to pass any arguments directly when invoking retrieved function pointer you must specify delegate type name,
-// which actually points to a delegate type defined in the .NET assembly.
-// 2. Otherwise the signature you use when calling the managed method from the native side is: int func(void* args, int sizeBytes).
-// The same signature should be in the managed method: int func(IntPtr args, int sizeBytes).
+// A method can be invoked using type name, and method name. However...
+// 1. Usually you must specify delegate type name, which actually points to a delegate type defined in a .NET assembly.
+// 2. Otherwise, if you haven't specified it, the signature you use when calling the managed method from the native side is:
+// int func(void* args, int sizeBytes). The same signature should be in the managed method: int Func(IntPtr args, int sizeBytes).
 // This specifies a pointer to method arguments, and the size of arguments in bytes. Should the return type be int? I don't remember.
-// 3. Also you can invoke a managed method without a predefined signature (when you haven't specified the delegate typename), or 
-// the delegate type name. To do this you pass NetHost::UNMANAGED_CALLERS_ONLY constant to the delegate type name argument, and mark
-// your managed method with UnmanagedCallersOnly attribute. After that you will no longer be able to execute it from the managed code
-// directly, but you will be able to execute it from the native code with any signature. It will work on .NET 5 and above.
-// 4. You can invoke only static methods this way. Otherwise you should use Marshal.GetFunctionPointerForDelegate<T>() on the managed side,
-// so you can have a native pointer to execute any method, not only static ones.
+// 3. Also you can invoke a managed method without a predefined signature when you haven't specified the delegate typename).
+// To do this you pass NetHost::UNMANAGED_CALLERS_ONLY constant to the delegate type name argument, and mark your managed method
+// with the UnmanagedCallersOnly attribute. After that you will no longer be able to execute it from the managed code directly,
+// but you will be able to execute it from the native code with any signature. It will work on .NET 5 and above.
+// 4. You can invoke only static methods this way. Otherwise you should use Marshal.GetFunctionPointerForDelegate<T>() on the
+// managed side, so you can have a native pointer to execute any method, not only static ones.
 
 // Additional things will be corrected and improved as long as I find something new.
 
@@ -25,7 +23,7 @@ namespace NetHost
 	typedef void(__cdecl* ErrorWriterCallback)(const wchar_t* message);
 	typedef int(__cdecl *DefaultDNetCallback)(void* args, int sizeBytes);
 
-	// (NET 5+) Use to call a C# method without a predefined signature, but it must be marked with [UnmanagedCallersOnly].
+	// [NET 5+] Use to call a C# method without a predefined signature, but it must be marked with the UnmanagedCallersOnly attribute.
 	const wchar_t* const UNMANAGED_CALLERS_ONLY = (const wchar_t*) -1;
 
 	// Initialize the utilities, and find and load hostfxr. Returns true if it's been loaded or already loaded.
