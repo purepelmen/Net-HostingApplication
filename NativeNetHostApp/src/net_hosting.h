@@ -81,6 +81,7 @@ namespace NetHost
 		GetFuncPointer_RuntimeDelegate GenerateGetFuncPointerDelegate() const;
 
 		HostContext& operator=(const HostContext& handle) = delete;
+		inline bool IsValid() const { return handle != nullptr; }
 
 	private:
 		void ThrowIfNoValidHandle() const;

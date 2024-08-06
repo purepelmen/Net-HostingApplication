@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <iostream>
 
-#define NETHOST_USE_AS_STATIC
 #include <nethost.h>
 #include <hostfxr.h>
 #include <coreclr_delegates.h>
@@ -96,7 +95,7 @@ namespace NetHost
 
 	void HostContext::ThrowIfNoValidHandle() const
 	{
-		if (handle == nullptr)
+		if (!IsValid())
 		{
 			throw std::runtime_error("Handle is nullptr");
 		}
