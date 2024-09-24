@@ -87,9 +87,10 @@ namespace NetHost
 		void ThrowIfNoValidHandle() const;
 	};
 
-	// Initialize for running an application using the path to an executable.
+	// Initialize for running an application using the path to an executable from the command args passed (like: TestManaged.dll arg1 arg2).
 	// The application part means the managed (.DLL) will work as if you **run** an executable, rather than loading
 	// a library/component (i.e. to customize how the managed app is started).
+	// ( ! ) Allowed to be called once per process.
 	HostContext InitForCommandLine(int argc, const wchar_t** argv);
 
 	// Initialize for running as a component using a runtime configuration.

@@ -7,9 +7,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-static void DebugDNetError(const wchar_t* message);
-static std::wstring GetExecutableDirW();
+using std::filesystem::path;
 
+static path GetExecutablePath();
+
+static void DebugDNetError(const wchar_t* message);
 static void DoTestUtility();
 
 using VoidNoArgPointer = void (*)();
@@ -18,9 +20,9 @@ using HostCommInitCallback = void (*)(void* utilityLocator);
 int main()
 {
     // Essential paths.
-    std::wstring executableDir = GetExecutableDirW();
-    std::wstring pathToRuntimeConfig = executableDir + L"\\ManagedApp.runtimeconfig.json";
-    std::wstring assemblyPath = executableDir + L"\\ManagedApp.dll";
+    path executableDir = GetExecutablePath();
+    path pathToRuntimeConfig = executableDir / L"ManagedApp.runtimeconfig.json";
+    path assemblyPath = executableDir / L"ManagedApp.dll";
 
     if (!NetHost::Init())
     {
@@ -37,30 +39,30 @@ int main()
     void* callback;
 
     std::cout << "Switching to the .NET world...\n";
-    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.HostComm, ManagedApp", L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
+    callback = loadAndGetDelegate.Perform(assemblyPath.native(), L"ManagedApp.HostComm, ManagedApp", L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
     ((HostCommInitCallback)callback)(&HostComm::GetNativeUtility);
 
     HostComm::RegisterNativeUtility(L"test_utility", &DoTestUtility);
 
-    callback = loadAndGetDelegate.Perform(assemblyPath, L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, mscorlib");
+    callback = loadAndGetDelegate.Perform(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, mscorlib");
     ((VoidNoArgPointer)callback)();
 
     context.Close();
     NetHost::Shutdown();
 }
 
-void DebugDNetError(const wchar_t* message)
-{
-    std::cout << "[.NET Error Writer Handler] -> ";
-    std::wcout << message << std::endl;
-}
-
-std::wstring GetExecutableDirW()
+path GetExecutablePath()
 {
     wchar_t buffer[MAX_PATH]{};
 
     std::filesystem::path exePath = std::wstring(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
-    return exePath.parent_path().wstring();
+    return exePath.parent_path();
+}
+
+void DebugDNetError(const wchar_t* message)
+{
+    std::cout << "[.NET Error Writer Handler] -> ";
+    std::wcout << message << std::endl;
 }
 
 void DoTestUtility()

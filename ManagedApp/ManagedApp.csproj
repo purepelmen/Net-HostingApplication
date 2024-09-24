@@ -6,10 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <Platforms>x64</Platforms>
+
+	<!-- Better immediately build it to the desired directory. -->
+	<OutputPath>$(SolutionDir).Out\$(PlatformTarget)-$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
-
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /s /e /y $(OutDir) $(SolutionDir).Out\$(PlatformTarget)-$(Configuration)\" />
-  </Target>
 </Project>
