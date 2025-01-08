@@ -101,11 +101,7 @@ namespace NetHost
 		}
 	}
 
-	LoadAssemblyAndGetFuncPointer_RuntimeDelegate::LoadAssemblyAndGetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate)
-	{
-	}
-
-	void* LoadAssemblyAndGetFuncPointer_RuntimeDelegate::Perform(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
+	void* LoadAssemblyAndGetFuncPointer_RuntimeDelegate::operator()(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
 	{
 		void* outCallback;
 		int result = ((load_assembly_and_get_function_pointer_fn)delegate)(assemblyPath.data(), typeName.data(), methodName.data(), delegateTypeName, nullptr, &outCallback);
@@ -114,11 +110,7 @@ namespace NetHost
 		return outCallback;
 	}
 
-	GetFuncPointer_RuntimeDelegate::GetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate)
-	{
-	}
-
-	void* GetFuncPointer_RuntimeDelegate::Perform(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
+	void* GetFuncPointer_RuntimeDelegate::operator()(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
 	{
 		void* outCallback;
 		int result = ((get_function_pointer_fn)delegate)(typeName.data(), methodName.data(), delegateTypeName, nullptr, nullptr, &outCallback);
@@ -127,7 +119,7 @@ namespace NetHost
 		return outCallback;
 	}
 
-	LoadAssemblyAndGetFuncPointer_RuntimeDelegate HostContext::GenerateLoadAssemblyAndGetFuncPointerDelegate() const
+	LoadAssemblyAndGetFuncPointer_RuntimeDelegate HostContext::GetLoadAssemblyAndGetFuncPointer() const
 	{
 		ThrowIfUninitialized();
 		ThrowIfNoValidHandle();
@@ -141,7 +133,7 @@ namespace NetHost
 		return LoadAssemblyAndGetFuncPointer_RuntimeDelegate(delegate);
 	}
 
-	GetFuncPointer_RuntimeDelegate HostContext::GenerateGetFuncPointerDelegate() const
+	GetFuncPointer_RuntimeDelegate HostContext::GetGetFuncPointer() const
 	{
 		ThrowIfUninitialized();
 		ThrowIfNoValidHandle();
@@ -193,7 +185,7 @@ namespace NetHost
 			}
 
 			assert(result != StatusCode::HostApiBufferTooSmall);
-			assert(result == S_OK);
+			assert(STATUS_CODE_SUCCEEDED(result));
 
 			dllToLoad = std::wstring_view(hostFxrPathBuffer, buffSize);
 		}

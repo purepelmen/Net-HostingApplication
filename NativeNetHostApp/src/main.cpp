@@ -15,10 +15,11 @@ static void DebugDNetError(const wchar_t* message);
 static void DoTestUtility();
 
 using VoidNoArgPointer = void (*)();
-using HostCommInitCallback = void (*)(void* utilityLocator);
 
 int main()
 {
+    SetEnvironmentVariable(L"_COREHOST_TRACE", L"1");
+
     // Essential paths.
     path executableDir = GetExecutablePath();
     path pathToRuntimeConfig = executableDir / L"ManagedApp.runtimeconfig.json";
@@ -30,21 +31,20 @@ int main()
         return -1;
     }
     
-    std::cout << "The .NET hosting environment has been initialized.\n";
-    NetHost::SetErrorWriter(DebugDNetError);
-
     NetHost::HostContext context = NetHost::InitForRuntimeConfig(pathToRuntimeConfig.c_str());
-    auto loadAndGetDelegate = context.GenerateLoadAssemblyAndGetFuncPointerDelegate();
-
-    void* callback;
+    NetHost::SetErrorWriter(DebugDNetError);
+    std::cout << "The .NET hosting environment has been initialized.\n";
 
     std::cout << "Switching to the .NET world...\n";
-    callback = loadAndGetDelegate.Perform(assemblyPath.native(), L"ManagedApp.HostComm, ManagedApp", L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
-    ((HostCommInitCallback)callback)(&HostComm::GetNativeUtility);
 
+    HostComm::Init(context, assemblyPath.native(), L"ManagedApp");
     HostComm::RegisterNativeUtility(L"test_utility", &DoTestUtility);
 
-    callback = loadAndGetDelegate.Perform(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, mscorlib");
+    auto loadAndGetDelegate = context.GetLoadAssemblyAndGetFuncPointer();
+
+    void* callback;
+    callback = loadAndGetDelegate(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, mscorlib");
+    
     ((VoidNoArgPointer)callback)();
 
     context.Close();

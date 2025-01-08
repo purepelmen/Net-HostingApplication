@@ -47,8 +47,8 @@ namespace NetHost
 		void* delegate;
 
 	public:
-		LoadAssemblyAndGetFuncPointer_RuntimeDelegate(void* delegate);
-		void* Perform(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
+		LoadAssemblyAndGetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate) {}
+		void* operator()(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
 	};
 
 	// A delegate to get function pointer to a managed method [NET 5+].
@@ -58,8 +58,8 @@ namespace NetHost
 		void* delegate;
 
 	public:
-		GetFuncPointer_RuntimeDelegate(void* delegate);
-		void* Perform(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
+		GetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate) {}
+		void* operator()(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
 	};
 
 	class HostContext
@@ -70,17 +70,18 @@ namespace NetHost
 	public:
 		HostContext(void* handle);
 		HostContext(HostContext&& other) noexcept;
+
 		HostContext(const HostContext& handle) = delete;
+		HostContext& operator=(const HostContext& handle) = delete;
 
 		void Close();
+
+		LoadAssemblyAndGetFuncPointer_RuntimeDelegate GetLoadAssemblyAndGetFuncPointer() const;
+		GetFuncPointer_RuntimeDelegate GetGetFuncPointer() const;
 
 		// Run the app (works if you use InitForCommandLine() to host an app).
 		int RunApp() const;
 
-		LoadAssemblyAndGetFuncPointer_RuntimeDelegate GenerateLoadAssemblyAndGetFuncPointerDelegate() const;
-		GetFuncPointer_RuntimeDelegate GenerateGetFuncPointerDelegate() const;
-
-		HostContext& operator=(const HostContext& handle) = delete;
 		inline bool IsValid() const { return handle != nullptr; }
 
 	private:
