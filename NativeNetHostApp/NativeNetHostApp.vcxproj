@@ -97,7 +97,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\net_hosting.h" />
-    <ClInclude Include="src\net_hosting_internal.h" />
     <ClInclude Include="src\host_comm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
@@ -108,5 +107,8 @@
     <Content Include="..\.Thirdparty\*.dll" Visible="true">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+
+    <!-- Make sure the Managed project output is copied to our build output. -->
+    <Content Include="..\ManagedApp\bin\$(Platform)\$(Configuration)\**" LinkBase=".\" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
