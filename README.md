@@ -31,9 +31,9 @@ The created hosting context object allows you to further work with the app like:
 * `Close()` the hosting context.
 
 #### Runtime Delegate Functors
-The host context allows you to get runtime delegates in the form of functors that's basically a class `*_RuntimeDelegate` with an overloaded function call operator to invoke the delegate.
-* `LoadAssemblyAndGetFuncPointer_RuntimeDelegate`
-* `GetFuncPointer_RuntimeDelegate`
+The host context allows you to get runtime delegates in the form of functors that's basically a class `rd_*` with an overloaded function call operator to invoke the delegate.
+* `rd_LoadAssemblyAndGetFuncPointer`
+* `rd_GetFuncPointer`
 
 ### HostComm
 This module provides a way to communicate between two sides.
@@ -51,3 +51,5 @@ This is only permitted after a successful HostComm initialization which can be q
 ## TODO
 - [ ] Improve error handling that's currently simply checked with `assert()` calls.
 - [ ] Create CMake project to build for Linux.
+- [ ] 32-bit support?
+- [ ] Allow to embed CoreCLR as a build option?
