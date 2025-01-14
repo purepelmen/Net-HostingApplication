@@ -9,7 +9,7 @@
 // 2. Otherwise, if you haven't specified it, the signature you use when calling the managed method from the native side is:
 // int func(void* args, int sizeBytes). The same signature should be in the managed method: int Func(IntPtr args, int sizeBytes).
 // This specifies a pointer to method arguments, and the size of arguments in bytes. Should the return type be int? I don't remember.
-// 3. Also you can invoke a managed method without a predefined signature when you haven't specified the delegate typename).
+// 3. Also you can invoke a managed method without a predefined signature when you haven't specified the delegate typename.
 // To do this you pass NetHost::UNMANAGED_CALLERS_ONLY constant to the delegate type name argument, and mark your managed method
 // with the UnmanagedCallersOnly attribute. After that you will no longer be able to execute it from the managed code directly,
 // but you will be able to execute it from the native code with any signature. It will work on .NET 5 and above.
@@ -26,8 +26,8 @@ namespace NetHost
 	// [NET 5+] Use to call a C# method without a predefined signature, but it must be marked with the UnmanagedCallersOnly attribute.
 	const wchar_t* const UNMANAGED_CALLERS_ONLY = (const wchar_t*) -1;
 
-	// Initialize the utilities, and find and load hostfxr. Returns true if it's been loaded or already loaded.
-	// And returns false if initialization has failed. You can also specify a custom path to the folder containing hostfxr.
+	// Initialize the utilities, and find and load hostfxr. Returns true if it's already loaded, and false if initialization has failed. 
+	/// @param pathToRuntime Optionally a custom path may be specified to the folder containing hostfxr which will skip using nethost to find the hostfxr library.
 	bool Init(std::optional<std::filesystem::path> pathToRuntime = {});
 
 	// Deinitialize the utilities and unload the hostfxr library. Does nothing if it's not inited.
@@ -39,26 +39,35 @@ namespace NetHost
 	// Specify a callback that will be invoked by .NET hosting components when an error is occured.
 	void SetErrorWriter(ErrorWriterCallback callback);
 
-	// A delegate to load assembly and then get function pointer to a managed method. When invoking the delegate, the typename
-	// doesn't necessarily have to be stored in the assembly being loaded. It could be in one of the dependencies.
-	class LoadAssemblyAndGetFuncPointer_RuntimeDelegate
+	// Base class for all runtime delegates, which are basically functors that wrap runtime delegates that hostfxr provides via `get_runtime_delegate`.
+	class RuntimeDelegate
 	{
-	private:
-		void* delegate;
+	protected:
+		void* delegate = nullptr;
 
 	public:
-		LoadAssemblyAndGetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate) {}
+		RuntimeDelegate(void* delegate) : delegate(delegate) {}
+		RuntimeDelegate() = default;
+
+		bool HasValue() const { return delegate != nullptr; }
+	};
+
+	// A delegate to load assembly and then get function pointer to a managed method. When invoking the delegate, the typename
+	// doesn't necessarily have to be stored in the assembly being loaded. It could be in one of the dependencies.
+	class rd_LoadAssemblyAndGetFuncPointer : public RuntimeDelegate
+	{
+	public:
+		using RuntimeDelegate::RuntimeDelegate;
+
 		void* operator()(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
 	};
 
 	// A delegate to get function pointer to a managed method [NET 5+].
-	class GetFuncPointer_RuntimeDelegate
+	class rd_GetFuncPointer : public RuntimeDelegate
 	{
-	private:
-		void* delegate;
-
 	public:
-		GetFuncPointer_RuntimeDelegate(void* delegate) : delegate(delegate) {}
+		using RuntimeDelegate::RuntimeDelegate;
+
 		void* operator()(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
 	};
 
@@ -76,12 +85,13 @@ namespace NetHost
 
 		void Close();
 
-		LoadAssemblyAndGetFuncPointer_RuntimeDelegate GetLoadAssemblyAndGetFuncPointer() const;
-		GetFuncPointer_RuntimeDelegate GetGetFuncPointer() const;
+		rd_LoadAssemblyAndGetFuncPointer GetLoadAssemblyAndGetFuncPointer() const;
+		rd_GetFuncPointer GetGetFuncPointer() const;
 
-		// Run the app (works if you use InitForCommandLine() to host an app).
+		// Run the managed app (works if you use InitForCommandLine() to host an app) and return when it exits.
 		int RunApp() const;
 
+		// A host context is valid if it wasn't disposed or moved to another object, meaning that you can safely work with it.
 		inline bool IsValid() const { return handle != nullptr; }
 
 	private:

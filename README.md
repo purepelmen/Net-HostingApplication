@@ -47,3 +47,7 @@ This is only permitted after a successful HostComm initialization which can be q
 * `HostComm.GetNativeUtility()`
 * `HostComm.RequireNativeUtility()`
 * `HostComm.IsInitialized`
+
+## TODO
+- [ ] Improve error handling that's currently simply checked with `assert()` calls.
+- [ ] Create CMake project to build for Linux.

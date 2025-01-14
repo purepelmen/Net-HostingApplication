@@ -1,5 +1,4 @@
 #include "net_hosting.h"
-#include "net_hosting_internal.h"
 
 #include <cassert>
 #include <utility>
@@ -11,10 +10,33 @@
 #include <coreclr_delegates.h>
 #include <error_codes.h>
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
 namespace NetHost
 {
+	struct HostFxrFuncs
+	{
+		hostfxr_set_error_writer_fn set_error_writer;
+
+		hostfxr_initialize_for_dotnet_command_line_fn initialize_for_dotnet_command_line;
+		hostfxr_initialize_for_runtime_config_fn initialize_for_runtime_config;
+		hostfxr_get_runtime_delegate_fn get_runtime_delegate;
+		hostfxr_run_app_fn run_app;
+		hostfxr_close_fn close;
+	};
+
+	struct LoadedHostFxr
+	{
+		HMODULE module = NULL;
+		HostFxrFuncs funcs;
+	};
+
 	static bool i_isHostFxrLoaded = false;
 	static LoadedHostFxr i_loadedFxr{};
+
+	// Find and load the hostfxr by using nethost, or load it directly if the path is specified.
+	static HMODULE LoadHostFxr(std::optional<std::filesystem::path> pathToRuntime);
 
 	static void ThrowIfUninitialized()
 	{
@@ -101,7 +123,7 @@ namespace NetHost
 		}
 	}
 
-	void* LoadAssemblyAndGetFuncPointer_RuntimeDelegate::operator()(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
+	void* rd_LoadAssemblyAndGetFuncPointer::operator()(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
 	{
 		void* outCallback;
 		int result = ((load_assembly_and_get_function_pointer_fn)delegate)(assemblyPath.data(), typeName.data(), methodName.data(), delegateTypeName, nullptr, &outCallback);
@@ -110,7 +132,7 @@ namespace NetHost
 		return outCallback;
 	}
 
-	void* GetFuncPointer_RuntimeDelegate::operator()(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
+	void* rd_GetFuncPointer::operator()(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName) const
 	{
 		void* outCallback;
 		int result = ((get_function_pointer_fn)delegate)(typeName.data(), methodName.data(), delegateTypeName, nullptr, nullptr, &outCallback);
@@ -119,7 +141,7 @@ namespace NetHost
 		return outCallback;
 	}
 
-	LoadAssemblyAndGetFuncPointer_RuntimeDelegate HostContext::GetLoadAssemblyAndGetFuncPointer() const
+	rd_LoadAssemblyAndGetFuncPointer HostContext::GetLoadAssemblyAndGetFuncPointer() const
 	{
 		ThrowIfUninitialized();
 		ThrowIfNoValidHandle();
@@ -128,12 +150,13 @@ namespace NetHost
 		void* delegate = nullptr;
 
 		int result = i_loadedFxr.funcs.get_runtime_delegate(handle, delegateType, &delegate);
-		assert(result == S_OK);
+		if (!STATUS_CODE_SUCCEEDED(result))
+			return {};
 
-		return LoadAssemblyAndGetFuncPointer_RuntimeDelegate(delegate);
+		return { delegate };
 	}
 
-	GetFuncPointer_RuntimeDelegate HostContext::GetGetFuncPointer() const
+	rd_GetFuncPointer HostContext::GetGetFuncPointer() const
 	{
 		ThrowIfUninitialized();
 		ThrowIfNoValidHandle();
@@ -142,9 +165,10 @@ namespace NetHost
 		void* delegate = nullptr;
 
 		int result = i_loadedFxr.funcs.get_runtime_delegate(handle, delegateType, &delegate);
-		assert(result == S_OK);
+		if (!STATUS_CODE_SUCCEEDED(result))
+			return {};
 
-		return GetFuncPointer_RuntimeDelegate(delegate);
+		return { delegate };
 	}
 
 	HostContext InitForCommandLine(int argc, const wchar_t** argv)
