@@ -102,10 +102,10 @@ namespace NetHost
 	// The application part means the managed (.DLL) will work as if you **run** an executable, rather than loading
 	// a library/component (i.e. to customize how the managed app is started).
 	// ( ! ) Allowed to be called once per process.
-	HostContext InitForCommandLine(int argc, const wchar_t** argv);
+	HostContext NewContextForCommandLine(int argc, const wchar_t** argv);
 
 	// Initialize for running as a component using a runtime configuration.
 	// The component part means you **load** a library in addition to the native application, in contrast to running it as a
 	// managed sub-application.
-	HostContext InitForRuntimeConfig(const wchar_t* configPath);
+	HostContext NewContextForRuntimeConfig(const wchar_t* configPath);
 }

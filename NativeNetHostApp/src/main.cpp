@@ -32,7 +32,7 @@ int main()
         return -1;
     }
     
-    NetHost::HostContext context = NetHost::InitForRuntimeConfig(pathToRuntimeConfig.c_str());
+    NetHost::HostContext context = NetHost::NewContextForRuntimeConfig(pathToRuntimeConfig.c_str());
     NetHost::SetErrorWriter(DebugDNetError);
     std::cout << "The .NET hosting environment has been initialized.\n";
 

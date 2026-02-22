@@ -171,7 +171,7 @@ namespace NetHost
 		return { delegate };
 	}
 
-	HostContext InitForCommandLine(int argc, const wchar_t** argv)
+	HostContext NewContextForCommandLine(int argc, const wchar_t** argv)
 	{
 		ThrowIfUninitialized();
 
@@ -182,7 +182,7 @@ namespace NetHost
 		return HostContext(hostHandle);
 	}
 
-	HostContext InitForRuntimeConfig(const wchar_t* configPath)
+	HostContext NewContextForRuntimeConfig(const wchar_t* configPath)
 	{
 		ThrowIfUninitialized();
 
