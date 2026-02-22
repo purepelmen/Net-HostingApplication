@@ -18,7 +18,8 @@ using VoidNoArgPointer = void (*)();
 
 int main()
 {
-    SetEnvironmentVariable(L"_COREHOST_TRACE", L"1");
+    //SetEnvironmentVariable(L"COREHOST_TRACE", L"1");
+    //SetEnvironmentVariable(L"COREHOST_TRACE_VERBOSITY", L"4"); // From 1 (lowest) to 4 (highest).
 
     // Essential paths.
     path executableDir = GetExecutablePath();
@@ -43,7 +44,7 @@ int main()
     auto loadAndGetDelegate = context.GetLoadAssemblyAndGetFuncPointer();
 
     void* callback;
-    callback = loadAndGetDelegate(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, mscorlib");
+    callback = loadAndGetDelegate(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, netstandard");
     
     ((VoidNoArgPointer)callback)();
 

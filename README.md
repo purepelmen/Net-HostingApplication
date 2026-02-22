@@ -8,7 +8,6 @@ Additionally the native side also provides a tiny abstraction for this process t
 This module defines an abstraction over hostfxr and loading it.
 * net_hosting.h
 * net_hosting.cpp
-* net_hosting_internal.h
 
 There's enough comments to explain what's happenning there. Additional corrections will be made if I find more information.
 
