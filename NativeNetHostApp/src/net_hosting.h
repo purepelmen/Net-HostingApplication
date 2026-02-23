@@ -18,10 +18,20 @@
 
 // Additional things will be corrected and improved as long as I find something new.
 
+// ---
+// Delegates returned by CoreCLR are __stdcall on x86.
+#if defined(_WIN32)
+	#define DELEGATE_CALLTYPE __stdcall
+	#define ERRWRITER_CALLTYPE __cdecl
+#else
+	#define DELEGATE_CALLTYPE
+	#define ERRWRITER_CALLTYPE
+#endif
+
 namespace NetHost
 {
-	typedef void(__cdecl* ErrorWriterCallback)(const wchar_t* message);
-	typedef int(__cdecl *DefaultDNetCallback)(void* args, int sizeBytes);
+	typedef void (ERRWRITER_CALLTYPE *ErrorWriterCallback)(const wchar_t* message);
+	typedef int (DELEGATE_CALLTYPE *DefaultDNetCallback)(void* args, int sizeBytes);
 
 	// [NET 5+] Use to call a C# method without a predefined signature, but it must be marked with the UnmanagedCallersOnly attribute.
 	const wchar_t* const UNMANAGED_CALLERS_ONLY = (const wchar_t*) -1;

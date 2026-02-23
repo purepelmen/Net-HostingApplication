@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <stdexcept>
 
-using HostCommInitCallback = void (*)(void* utilityLocator);
+typedef void (DELEGATE_CALLTYPE *HostCommInitCallback)(void* utilityLocator);
 
 static bool g_isInitialized = false;
 static std::unordered_map<std::wstring, void*> g_nativeUtilities{};

@@ -4,17 +4,23 @@
 #include <iostream>
 #include <filesystem>
 
+#if _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#else
+#include <unistd.h>
+#include <limits.h>
+#include <string.h>
+#endif
 
 using std::filesystem::path;
 
 static path GetExecutablePath();
 
-static void DebugDNetError(const wchar_t* message);
-static void DoTestUtility();
+static void ERRWRITER_CALLTYPE DebugDNetError(const wchar_t* message);
+static void DELEGATE_CALLTYPE DoTestUtility();
 
-using VoidNoArgPointer = void (*)();
+typedef void (DELEGATE_CALLTYPE* VoidNoArgPointer)();
 
 int main()
 {
@@ -31,7 +37,7 @@ int main()
         std::cout << "Failed to initialize .NET host.\n";
         return -1;
     }
-    
+
     NetHost::HostContext context = NetHost::NewContextForRuntimeConfig(pathToRuntimeConfig.c_str());
     NetHost::SetErrorWriter(DebugDNetError);
     std::cout << "The .NET hosting environment has been initialized.\n";
@@ -45,7 +51,7 @@ int main()
 
     void* callback;
     callback = loadAndGetDelegate(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, netstandard");
-    
+
     ((VoidNoArgPointer)callback)();
 
     context.Close();
@@ -54,19 +60,27 @@ int main()
 
 path GetExecutablePath()
 {
-    wchar_t buffer[MAX_PATH]{};
+#ifdef _WIN32
+    TCHAR buffer[MAX_PATH]{};
+    path exePath = std::basic_string<TCHAR>(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
+#else
+    char buffer[PATH_MAX];
+    memset(buffer, 0, sizeof(buffer)); // readlink does not null terminate!
 
-    std::filesystem::path exePath = std::wstring(buffer, GetModuleFileName(NULL, buffer, MAX_PATH));
+    int chRead = readlink("/proc/self/exe", buffer, PATH_MAX);
+    path exePath = std::string(buffer, chRead);
+#endif
+
     return exePath.parent_path();
 }
 
-void DebugDNetError(const wchar_t* message)
+void ERRWRITER_CALLTYPE DebugDNetError(const wchar_t* message)
 {
     std::cout << "[.NET Error Writer Handler] -> ";
     std::wcout << message << std::endl;
 }
 
-void DoTestUtility()
+void DELEGATE_CALLTYPE DoTestUtility()
 {
     std::cout << "You've invoked the test utility on the native side.\n";
 }
