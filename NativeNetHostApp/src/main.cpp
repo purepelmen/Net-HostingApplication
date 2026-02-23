@@ -17,7 +17,7 @@ using std::filesystem::path;
 
 static path GetExecutablePath();
 
-static void ERRWRITER_CALLTYPE DebugDNetError(const wchar_t* message);
+static void ERRWRITER_CALLTYPE DebugDNetError(const char_t* message);
 static void DELEGATE_CALLTYPE DoTestUtility();
 
 typedef void (DELEGATE_CALLTYPE* VoidNoArgPointer)();
@@ -44,13 +44,13 @@ int main()
 
     std::cout << "Switching to the .NET world...\n";
 
-    HostComm::Init(context, assemblyPath.native(), L"ManagedApp");
-    HostComm::RegisterNativeUtility(L"test_utility", &DoTestUtility);
+    HostComm::Init(context, assemblyPath.c_str(), NH_STR("ManagedApp"));
+    HostComm::RegisterNativeUtility("test_utility", (void*)&DoTestUtility);
 
     auto loadAndGetDelegate = context.GetLoadAssemblyAndGetFuncPointer();
 
     void* callback;
-    callback = loadAndGetDelegate(assemblyPath.native(), L"ManagedApp.Program, ManagedApp", L"Main", L"System.Action, netstandard");
+    callback = loadAndGetDelegate(assemblyPath.native().c_str(), NH_STR("ManagedApp.Program, ManagedApp"), NH_STR("Main"), NH_STR("System.Action, netstandard"));
 
     ((VoidNoArgPointer)callback)();
 
@@ -74,7 +74,7 @@ path GetExecutablePath()
     return exePath.parent_path();
 }
 
-void ERRWRITER_CALLTYPE DebugDNetError(const wchar_t* message)
+void ERRWRITER_CALLTYPE DebugDNetError(const char_t* message)
 {
     std::cout << "[.NET Error Writer Handler] -> ";
     std::wcout << message << std::endl;

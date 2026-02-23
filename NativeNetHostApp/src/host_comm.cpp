@@ -3,45 +3,50 @@
 #include <unordered_map>
 #include <stdexcept>
 
-typedef void (DELEGATE_CALLTYPE *HostCommInitCallback)(void* utilityLocator);
+typedef void (DELEGATE_CALLTYPE* HostCommInitCallback)(void* (*utilityLocator)(const char*));
 
 static bool g_isInitialized = false;
-static std::unordered_map<std::wstring, void*> g_nativeUtilities{};
+static std::unordered_map<std::string, void*> g_nativeUtilities{};
 
-static std::wstring g_tempCheckingString{};
+static std::string g_tempCheckingString{};
 
-static void* GetNativeUtility_Raw(const wchar_t* utilityName)
+// Utility locator adapter (will be called from .NET).
+static void* GetNativeUtility_Raw(const char* utilityName)
 {
 	return HostComm::GetNativeUtility(utilityName);
 }
 
-void HostComm::Init(const NetHost::HostContext& hostContext, std::wstring_view assemblyPath, std::wstring_view assemblyName)
+void HostComm::Init(const NetHost::HostContext& hostContext, const char_t* assemblyPath, const char_t* assemblyName)
 {
-	auto loadAndGetFuncPointer = hostContext.GetLoadAssemblyAndGetFuncPointer();
+	if (g_isInitialized)
+		throw std::runtime_error{ "Already initialized" };
 
-	std::wstring fullTypeName{ L"ManagedApp.HostComm, " };
+	std::basic_string<char_t> fullTypeName{ NH_STR("ManagedApp.HostComm, ") };
 	fullTypeName += assemblyName;
 
-	void* callback = loadAndGetFuncPointer(assemblyPath, fullTypeName, L"Init", NetHost::UNMANAGED_CALLERS_ONLY);
+	auto loadAndGetFuncPointer = hostContext.GetLoadAssemblyAndGetFuncPointer();
+	void* callback = loadAndGetFuncPointer(assemblyPath, fullTypeName.c_str(), NH_STR("Init"), NetHost::UNMANAGED_CALLERS_ONLY);
+
 	((HostCommInitCallback)callback)(&GetNativeUtility_Raw);
+	g_isInitialized = true;
 }
 
-void HostComm::RegisterNativeUtility(std::wstring utilityName, void* callback)
+void HostComm::RegisterNativeUtility(const char* utilityName, void* callback)
 {
-	if (utilityName.length() == 0)
-		throw std::invalid_argument{ "The utility name is empty" };
+	if (utilityName == nullptr || *utilityName == '\0')
+		throw std::invalid_argument{ "The utility name is null or empty" };
 	if (callback == nullptr)
 		throw std::invalid_argument{ "The callback is null pointer (not allowed)" };
 
 	g_nativeUtilities.try_emplace(std::move(utilityName), callback);
 }
 
-void HostComm::UnregisterNativeUtility(const std::wstring& utilityName)
+void HostComm::UnregisterNativeUtility(const char* utilityName)
 {
 	g_nativeUtilities.erase(utilityName);
 }
 
-void* HostComm::GetNativeUtility(std::wstring_view utilityName)
+void* HostComm::GetNativeUtility(const char* utilityName)
 {
 	g_tempCheckingString = utilityName;
 	if (!g_nativeUtilities.contains(g_tempCheckingString))

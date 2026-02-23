@@ -23,18 +23,28 @@
 #if defined(_WIN32)
 	#define DELEGATE_CALLTYPE __stdcall
 	#define ERRWRITER_CALLTYPE __cdecl
+
+	#define NH_STR(x) L##x
+	#ifdef _WCHAR_T_DEFINED
+		typedef wchar_t char_t;
+	#else
+		typedef unsigned short char_t;
+	#endif
 #else
 	#define DELEGATE_CALLTYPE
 	#define ERRWRITER_CALLTYPE
+
+	#define NH_STR(x) x
+	typedef char char_t;
 #endif
 
 namespace NetHost
 {
-	typedef void (ERRWRITER_CALLTYPE *ErrorWriterCallback)(const wchar_t* message);
+	typedef void (ERRWRITER_CALLTYPE *ErrorWriterCallback)(const char_t* message);
 	typedef int (DELEGATE_CALLTYPE *DefaultDNetCallback)(void* args, int sizeBytes);
 
 	// [NET 5+] Use to call a C# method without a predefined signature, but it must be marked with the UnmanagedCallersOnly attribute.
-	const wchar_t* const UNMANAGED_CALLERS_ONLY = (const wchar_t*) -1;
+	const char_t* const UNMANAGED_CALLERS_ONLY = (const char_t*)-1;
 
 	// Initialize the utilities, and find and load hostfxr. Returns true if it's already loaded, and false if initialization has failed. 
 	/// @param pathToRuntime Optionally a custom path may be specified to the folder containing hostfxr which will skip using nethost to find the hostfxr library.
@@ -69,7 +79,7 @@ namespace NetHost
 	public:
 		using RuntimeDelegate::RuntimeDelegate;
 
-		void* operator()(std::wstring_view assemblyPath, std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
+		void* operator()(const char_t* assemblyPath, const char_t* typeName, const char_t* methodName, const char_t* delegateTypeName = nullptr) const;
 	};
 
 	// A delegate to get function pointer to a managed method [NET 5+].
@@ -78,7 +88,7 @@ namespace NetHost
 	public:
 		using RuntimeDelegate::RuntimeDelegate;
 
-		void* operator()(std::wstring_view typeName, std::wstring_view methodName, const wchar_t* delegateTypeName = nullptr) const;
+		void* operator()(const char_t* typeName, const char_t* methodName, const char_t* delegateTypeName = nullptr) const;
 	};
 
 	class HostContext
@@ -112,10 +122,10 @@ namespace NetHost
 	// The application part means the managed (.DLL) will work as if you **run** an executable, rather than loading
 	// a library/component (i.e. to customize how the managed app is started).
 	// ( ! ) Allowed to be called once per process.
-	HostContext NewContextForCommandLine(int argc, const wchar_t** argv);
+	HostContext NewContextForCommandLine(int argc, const char_t** argv);
 
 	// Initialize for running as a component using a runtime configuration.
 	// The component part means you **load** a library in addition to the native application, in contrast to running it as a
 	// managed sub-application.
-	HostContext NewContextForRuntimeConfig(const wchar_t* configPath);
+	HostContext NewContextForRuntimeConfig(const char_t* configPath);
 }

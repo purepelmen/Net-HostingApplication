@@ -10,10 +10,10 @@ namespace HostComm
 	/// can now be able to communicate back to here (the native side).
 	/// @param assemblyPath The path for the main assembly to load.
 	/// @param assemblyName The assembly where HostComm managed class resides.
-	void Init(const NetHost::HostContext& hostContext, std::wstring_view assemblyPath, std::wstring_view assemblyName);
+	void Init(const NetHost::HostContext& hostContext, const char_t* assemblyPath, const char_t* assemblyName);
 
-	void RegisterNativeUtility(std::wstring utilityName, void* callback);
-	void UnregisterNativeUtility(const std::wstring& utilityName);
+	void RegisterNativeUtility(const char* utilityName, void* callback);
+	void UnregisterNativeUtility(const char* utilityName);
 
-	void* GetNativeUtility(std::wstring_view utilityName);
+	void* GetNativeUtility(const char* utilityName);
 }
