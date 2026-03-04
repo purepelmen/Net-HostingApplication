@@ -49,6 +49,6 @@ This is only permitted after a successful HostComm initialization which can be q
 
 ## TODO
 - [ ] Improve error handling that's currently simply checked with `assert()` calls.
-- [ ] Create CMake project to build for Linux.
-- [ ] 32-bit support?
+- [x] Create CMake project to build for Linux.
+- [x] 32-bit support?
 - [ ] Allow to embed CoreCLR as a build option?
